@@ -1,0 +1,276 @@
+---
+title: "Final_Project"
+author: "Group 9"
+date: '2022-12-10'
+output: pdf_document
+---
+
+Initial Data set:
+
+GPA: The higher the GPA, the more likely the student will have a higher
+chance of success
+
+Previous Years of ExP (years): The more years of experience the student has,
+the higher chance of success the student will have
+
+Work Hours/day: The more Work Hours per day the students does,
+the lower chance of success the student will have
+
+
+```{r}
+knitr::include_graphics("Dataset.png")
+```
+
+
+
+Decision Variables
+
+Explanation: For each row of students they will be assigned to a group. The 
+numbers next to the variables are the success rates for that particular 
+student
+
+Example: If student 1 were to be assigned to Group 3, c1 will be 1 and a1, b1,
+and d1 will be 0. 
+
+```{r}
+knitr::include_graphics("Decision_Variables.png")
+```
+
+Objective Function:
+
+MAX: 80a1+ 70a2+ 75a3+ 90a4+ 10a5+ 20a6+ 95a7+ 10a8+ 40a9+ 30a10+ 65a11+ 30a12+
+    80b1+ 70b2+ 75b3+ 90b4+ 10b5+ 20b6+ 95b7+ 10b8+ 40b9+ 30b10+ 65b11+ 30b12+
+    80c1+ 70c2+ 75c3+ 90c4+ 10c5+ 20c6+ 95c7+ 10c8+ 40c9+ 30c10+ 65c11+ 30c12+
+    80d1+ 70d2+ 75d3+ 90d4+ 10d5+ 20d6+ 95d7+ 10da8+ 40d9+ 30d10+ 65d11+ 30d12
+
+
+
+
+```{r, results='hide'}
+library(lpSolveAPI)
+```
+
+
+
+```{r}
+lprec = make.lp(0,48)
+```
+
+
+
+```{r, results='hide'}
+set.objfn(lprec, c(80, 70, 75, 90, 10, 20, 95, 10, 40, 30, 65, 30,
+                    80, 70, 75, 90, 10, 20, 95, 10, 40, 30, 65, 30,
+                    80, 70, 75, 90, 10, 20, 95, 10, 40, 30, 65, 30,
+                    80, 70, 75, 90, 10, 20, 95, 10, 40, 30, 65, 30))
+lp.control(lprec, sense = 'max')
+set.type(lprec,1:48, type = c("integer"))
+```
+
+Constraints:
+
+3 students will be assigned to a group and each student must be assigned 
+to 1 and only 1 group. 
+
+These 4 constraints is to assign 3 students per group 
+a1, a2, a3... a12 = 3
+b1, a2, a3... b12 = 3
+c1, c2, c3... c12 = 3
+d1, d2, d3... d12 = 3
+
+These 12 constraints are to ensure there is 1 student per group
+a1, b2, c2, d1 = 1
+a2, b2, c2, d2 = 1
+a3, b2, c2, d3 = 1
+so on...
+a12, b12, c12, d12 = 1
+
+```{r}
+add.constraint(lprec, c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), "=", 3) 
+
+# Group1 count constraint. Other 3 constraints have been hidden for readability
+
+
+```
+
+
+```{r, include=FALSE}
+
+add.constraint(lprec, c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), "=", 3) # Group2 count
+
+
+add.constraint(lprec, c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), "=", 3) # Group3 count
+
+add.constraint(lprec, c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1), "=", 3) # Group4 count
+
+```
+
+```{r}
+
+#Next 12 constraints are ensuring that the students are only assigned to 1 group
+
+add.constraint(lprec, c(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), "=", 1) 
+
+#Remaining 11 have been hidden for readability
+```
+
+```{r, include=FALSE}
+                       
+add.constraint(lprec, c(0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), "=", 1) 
+
+add.constraint(lprec, c(0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0), "=", 1) 
+
+add.constraint(lprec, c(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0), "=", 1) 
+
+add.constraint(lprec, c(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0), "=", 1) 
+
+add.constraint(lprec, c(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
+                         0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0), "=", 1) 
+
+add.constraint(lprec, c(0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+                         0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+                         0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+                         0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0), "=", 1) 
+
+add.constraint(lprec, c(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
+                         0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
+                         0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
+                         0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0), "=", 1) 
+
+add.constraint(lprec, c(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+                         0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+                         0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+                         0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0), "=", 1) 
+
+add.constraint(lprec, c(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0), "=", 1) 
+
+add.constraint(lprec, c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0), "=", 1) 
+
+add.constraint(lprec, c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+                         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1), "=", 1) 
+
+```
+
+```{r}
+solve(lprec)
+```
+0 means there is a solution
+
+
+```{r}
+get.objective(lprec)
+```
+
+615 is the sum of the success rates. Checking this ensures the objective 
+function met. anything greater or less than 615 would have meant either an error
+in the code or a student wasnt being used or a student could have been used twice
+
+```{r}
+vars = get.variables(lprec)
+vars
+```
+
+Where we see a 1 above that means a student is being assigned to a group. The 
+code below will make this more readable.
+
+```{r}
+#Creating a array then table
+Group_Assignments = c(vars)
+Group_table = array(Group_Assignments, dim = c(12, 4))
+
+```
+
+Updating the Row Names
+```{r}
+df = data.frame(Group_table)
+for (i in 1:12){
+  row.names(df)[i] = paste('Student', as.character(i))
+}
+df
+
+
+```
+
+
+
+Updating the Column Names
+
+```{r}
+for (i in 1:4){
+  colnames(df)[i] = paste('Group', as.character(i))
+}
+df
+```
+
+Lets calculate the total and average success rate per group
+
+```{r}
+#sr = success rate
+Student1_sr = 80
+Student2_sr = 70
+Student3_sr = 75
+Student4_sr = 90
+Student5_sr = 10
+Student6_sr = 20
+Student7_sr = 95
+Student8_sr = 10
+Student9_sr = 40
+Student10_sr = 30
+Student11_sr = 65
+Student12_sr = 30
+```
+
+```{r}
+Group1_rates = c(Student1_sr, Student4_sr, Student7_sr)
+Group2_rates = c(Student2_sr, Student3_sr, Student11_sr)
+Group3_rates = c(Student9_sr, Student10_sr, Student12_sr)
+Group4_rates = c(Student5_sr, Student6_sr, Student8_sr)
+
+```
+
+```{r}
+print(paste("Group 1's Success Rate Total:", as.character(sum(Group1_rates)),", Average:", as.character(round(mean(Group1_rates)), 0)))
+print(paste("Group 2's Success Rate Total:", as.character(sum(Group2_rates)),", Average:", as.character(round(mean(Group2_rates)), 0)))
+print(paste("Group 3's Success Rate Total:", as.character(sum(Group3_rates)),", Average:", as.character(round(mean(Group3_rates)), 0)))
+print(paste("Group 4's Success Rate Total:", as.character(sum(Group4_rates)),", Average:", as.character(round(mean(Group4_rates)), 0)))
+
+
+```
+
